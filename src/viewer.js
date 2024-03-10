@@ -728,33 +728,44 @@ export class Viewer {
 		// Viewer 설정 업데이트
 		this.scene.background = newOptions.background ? new Color(newOptions.bgColor) : null;
 		this.controls.autoRotate = newOptions.autoRotate;
+		// Wireframe, Skeleton 등의 옵션들은 특정 조건에서만 적용되므로, 해당 조건을 체크하는 로직이 필요할 수 있습니다.
+		// 예를 들어, Mesh 객체에만 wireframe 설정을 적용할 수 있습니다.
 		this.content.traverse((node) => {
 			if (node.isMesh) {
 				node.material.wireframe = newOptions.wireframe;
 				// Skeleton, Grid 등의 추가적인 설정도 여기에서 적용할 수 있습니다.
 			}
-			// Grid Helper 표시 여부
-			if (newOptions.grid && !this.gridHelper) {
-				this.gridHelper = new GridHelper(10, 10);
-				//this.scene.add(this.gridHelper);
-			} else if (!newOptions.grid && this.gridHelper) {
-				this.scene.remove(this.gridHelper);
-				//this.gridHelper = null;
-			}
-		
-			// Skeleton Helper 표시 여부
-			this.content.traverse((node) => {
-				if (node.isSkinnedMesh) {
-					node.skeleton.visible = newOptions.skeleton;
-				}
-			});
 		});
-
 	
-		// 화면 공간 패닝 (OrbitControls)
-		this.controls.screenSpacePanning = newOptions.screenSpacePan;
+		// Grid Helper 표시 여부
+		if (newOptions.grid && !this.gridHelper) {
+			this.gridHelper = new GridHelper(10, 10);
+			this.scene.add(this.gridHelper);
+		} else if (!newOptions.grid && this.gridHelper) {
+			this.scene.remove(this.gridHelper);
+			this.gridHelper = null;
+		}
 	
-		// 포인트 크기 설정
+		// Grid Helper 표시 여부
+		if (newOptions.grid && !this.gridHelper) {
+			this.gridHelper = new GridHelper(10, 10);
+			this.scene.add(this.gridHelper);
+		} else if (!newOptions.grid && this.gridHelper) {
+			this.scene.remove(this.gridHelper);
+			this.gridHelper = null;
+		}
+	
+		// Skeleton Helper 표시 여부
+		this.content.traverse((node) => {
+			if (node.isSkinnedMesh) {
+				node.skeleton.visible = newOptions.skeleton;
+			}
+		});
+	
+		// ScreenSpacePan 설정
+		this.controls.screenSpacePan = newOptions.screenSpacePan;
+	
+		// PointSize 설정 (PointMaterial을 사용하는 객체에 적용)
 		this.content.traverse((node) => {
 			if (node.material && node.material.type === 'PointsMaterial') {
 				node.material.size = newOptions.pointSize;
@@ -786,7 +797,6 @@ export class Viewer {
 			directionalLight.intensity = newOptions.directIntensity;
 			directionalLight.color = new Color(newOptions.directColor);
 		}
-
 	
 		// GUI 컨트롤 업데이트
 		const guiUpdateMapping = {
@@ -813,7 +823,7 @@ export class Viewer {
 			if (control) {
 				control.setValue(newOptions[option]);
 			}
-		};
+		}
 	}
 	
 	findGUIControl(name) {
@@ -823,8 +833,12 @@ export class Viewer {
 				foundControl = control;
 			}
 		});
-		if (!foundControl) {
-			// Lighting과 같은 다른 폴더의 컨트롤을 검색할 수 있습니다.
+		if (!foundControl && this.gui.__folders['Lighting']) {
+			this.gui.__folders['Lighting'].__controllers.forEach((control) => {
+				if (control.property === name) {
+					foundControl = control;
+				}
+			});
 		}
 		return foundControl;
 	}
