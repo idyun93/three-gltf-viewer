@@ -21,7 +21,8 @@ class App {
 	constructor(el, location) {
 		const hash = location.hash ? queryString.parse(location.hash) : {};
 		this.options = {
-			kiosk: Boolean(hash.kiosk),
+			//kiosk: Boolean(hash.kiosk),
+			kiosk: false,
 			model: hash.model || '',
 			preset: hash.preset || '',
 			cameraPosition: hash.cameraPosition ? hash.cameraPosition.split(',').map(Number) : null,
