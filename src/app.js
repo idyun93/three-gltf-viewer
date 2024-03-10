@@ -31,8 +31,9 @@ class App {
 		this.viewer = null;
 		this.viewerEl = null;
 		this.spinnerEl = el.querySelector('.spinner');
-		this.dropEl = el.querySelector('.dropzone');
-		this.inputEl = el.querySelector('#file-input');
+		//this.dropEl = el.querySelector('.dropzone');
+		this.dropEl = el.querySelector('#viewer-container');
+		//this.inputEl = el.querySelector('#file-input');
 		this.validator = new Validator(el);
 
 		//this.createDropzone();
