@@ -63,30 +63,51 @@ export class Viewer {
 		this.gui = null;
 
 		this.state = {
-			environment:
-				options.preset === Preset.ASSET_GENERATOR
-					? environments.find((e) => e.id === 'footprint-court').name
-					: environments[1].name,
-			background: false,
+			// `options`에서 전달받은 값으로 상태 설정
+			background: options.background,
+			autoRotate: options.autoRotate,
+			wireframe: options.wireframe,
+			skeleton: options.skeleton,
+			grid: options.grid,
+			screenSpacePan: options.screenSpacePan,
+			pointSize: options.pointSize,
+			bgColor: options.bgColor,
+			environment: options.environment,
+			toneMapping: options.toneMapping,
+			exposure: options.exposure,
+			punctualLights: options.punctualLights,
+			ambientIntensity: options.ambientIntensity,
+			ambientColor: options.ambientColor,
+			directIntensity: options.directIntensity,
+			directColor: options.directColor,
+			
 			playbackSpeed: 1.0,
-			actionStates: {},
-			camera: DEFAULT_CAMERA,
-			wireframe: false,
-			skeleton: false,
-			grid: false,
-			autoRotate: false,
 
-			// Lights
-			punctualLights: true,
-			exposure: 0.0,
-			toneMapping: LinearToneMapping,
-			ambientIntensity: 0.3,
-			ambientColor: '#FFFFFF',
-			directIntensity: 0.8 * Math.PI, // TODO(#116)
-			directColor: '#FFFFFF',
-			bgColor: '#191919',
+			selectedPreset: '',
+			// environment:
+			// 	options.preset === Preset.ASSET_GENERATOR
+			// 		? environments.find((e) => e.id === 'footprint-court').name
+			// 		: environments[1].name,
+			// background: false,
+			// playbackSpeed: 1.0,
+			// actionStates: {},
+			// camera: DEFAULT_CAMERA,
+			// wireframe: false,
+			// skeleton: false,
+			// grid: false,
+			// autoRotate: false,
 
-			pointSize: 1.0,
+			// // Lights
+			// punctualLights: true,
+			// exposure: 0.0,
+			// toneMapping: LinearToneMapping,
+			// ambientIntensity: 0.3,
+			// ambientColor: '#FFFFFF',
+			// directIntensity: 0.8 * Math.PI, // TODO(#116)
+			// directColor: '#FFFFFF',
+			// bgColor: '#191919',
+
+			// pointSize: 1.0,
 		};
 
 		this.prevTime = 0;
@@ -254,24 +275,29 @@ export class Viewer {
 
 		this.controls.reset();
 
-		object.position.x += object.position.x - center.x;
-		object.position.y += object.position.y - center.y;
-		object.position.z += object.position.z - center.z;
-		this.controls.maxDistance = size * 10;
-		this.defaultCamera.near = size / 100;
-		this.defaultCamera.far = size * 100;
-		this.defaultCamera.updateProjectionMatrix();
+		// object.position.x += object.position.x - center.x;
+		// object.position.y += object.position.y - center.y;
+		// object.position.z += object.position.z - center.z;
+		// this.controls.maxDistance = size * 10;
+		// this.defaultCamera.near = size / 100;
+		// this.defaultCamera.far = size * 100;
+		// this.defaultCamera.updateProjectionMatrix();
 
-		if (this.options.cameraPosition) {
-			this.defaultCamera.position.fromArray(this.options.cameraPosition);
-			this.defaultCamera.lookAt(new Vector3());
-		} else {
-			this.defaultCamera.position.copy(center);
-			this.defaultCamera.position.x += size / 2.0;
-			this.defaultCamera.position.y += size / 5.0;
-			this.defaultCamera.position.z += size / 2.0;
-			this.defaultCamera.lookAt(center);
-		}
+		// if (this.options.cameraPosition) {
+		// 	this.defaultCamera.position.fromArray(this.options.cameraPosition);
+		// 	this.defaultCamera.lookAt(new Vector3());
+		// } else {
+		// 	this.defaultCamera.position.copy(center);
+		// 	this.defaultCamera.position.x += size / 2.0;
+		// 	this.defaultCamera.position.y += size / 5.0;
+		// 	this.defaultCamera.position.z += size / 2.0;
+		// 	this.defaultCamera.lookAt(center);
+		// }
+		
+		// 새로운 카메라 위치 및 FOV 설정을 추가합니다.
+		this.defaultCamera.position.set(-5, 7, 10); // 카메라 위치 설정
+		this.defaultCamera.fov = 20; // 카메라 FOV 설정
+		this.defaultCamera.updateProjectionMatrix(); // 변경사항 적용
 
 		this.setCamera(DEFAULT_CAMERA);
 
@@ -356,23 +382,26 @@ export class Viewer {
 	updateLights() {
 		const state = this.state;
 		const lights = this.lights;
-
+	
 		if (state.punctualLights && !lights.length) {
 			this.addLights();
 		} else if (!state.punctualLights && lights.length) {
 			this.removeLights();
 		}
-
-		this.renderer.toneMapping = Number(state.toneMapping);
+	
+		// 'toneMapping' 값을 설정합니다.
+		// state.toneMapping 값에 따라 적절한 THREE의 ToneMapping 상수를 할당합니다.
+		this.renderer.toneMapping = state.toneMapping === 'LinearToneMapping' ? LinearToneMapping : ACESFilmicToneMapping;
+	
 		this.renderer.toneMappingExposure = Math.pow(2, state.exposure);
-
+	
 		if (lights.length === 2) {
 			lights[0].intensity = state.ambientIntensity;
 			lights[0].color.set(state.ambientColor);
 			lights[1].intensity = state.directIntensity;
 			lights[1].color.set(state.directColor);
 		}
-	}
+	}	
 
 	addLights() {
 		const state = this.state;
@@ -548,9 +577,20 @@ export class Viewer {
 		);
 		envMapCtrl.onChange(() => this.updateEnvironment());
 		[
-			lightFolder.add(this.state, 'toneMapping', {
+			// 기존 toneMapping 관련 코드를 주석 처리합니다.
+			/* lightFolder.add(this.state, 'toneMapping', {
 				Linear: LinearToneMapping,
 				'ACES Filmic': ACESFilmicToneMapping,
+			}), */
+			// 새로운 toneMapping 컨트롤 업데이트 코드를 삽입합니다.
+			lightFolder.add(this.state, 'toneMapping', {
+				'Linear': 'LinearToneMapping',
+				'ACES Filmic': 'ACESFilmicToneMapping'
+			}).onChange((value) => {
+				// state.toneMapping에 GUI에서 선택한 값을 업데이트합니다.
+				this.state.toneMapping = value;
+				// toneMapping이 변경되었으므로 lights를 업데이트합니다.
+				this.updateLights();
 			}),
 			lightFolder.add(this.state, 'exposure', -10, 10, 0.01),
 			lightFolder.add(this.state, 'punctualLights').listen(),
@@ -559,6 +599,7 @@ export class Viewer {
 			lightFolder.add(this.state, 'directIntensity', 0, 4), // TODO(#116)
 			lightFolder.addColor(this.state, 'directColor'),
 		].forEach((ctrl) => ctrl.onChange(() => this.updateLights()));
+
 
 		// Animation controls.
 		this.animFolder = gui.addFolder('Animation');
@@ -578,12 +619,22 @@ export class Viewer {
 		this.cameraFolder.domElement.style.display = 'none';
 
 		// Stats.
-		const perfFolder = gui.addFolder('Performance');
-		const perfLi = document.createElement('li');
-		this.stats.dom.style.position = 'static';
-		perfLi.appendChild(this.stats.dom);
-		perfLi.classList.add('gui-stats');
-		perfFolder.__ul.appendChild(perfLi);
+		// const perfFolder = gui.addFolder('Performance');
+		// const perfLi = document.createElement('li');
+		// this.stats.dom.style.position = 'static';
+		// perfLi.appendChild(this.stats.dom);
+		// perfLi.classList.add('gui-stats');
+		// perfFolder.__ul.appendChild(perfLi);
+
+		// Preset.
+		// Preset 설정을 위한 새로운 GUI 부분 추가
+		// Preset 설정을 위한 GUI 부분 추가
+		const presetFolder = this.gui.addFolder('Preset');
+		const presetControl = presetFolder.add(this.state, 'selectedPreset', Object.keys(window.presetOptions)).onChange(value => {
+			// 선택된 Preset에 따른 Viewer 옵션 업데이트
+			const selectedPresetOptions = window.presetOptions[value];
+			this.updateViewer(selectedPresetOptions);
+		});
 
 		const guiWrap = document.createElement('div');
 		this.el.appendChild(guiWrap);
@@ -671,6 +722,111 @@ export class Viewer {
 				this.animCtrls.push(ctrl);
 			});
 		}
+	}
+
+	updateViewer(newOptions) {
+		// Viewer 설정 업데이트
+		this.scene.background = newOptions.background ? new Color(newOptions.bgColor) : null;
+		this.controls.autoRotate = newOptions.autoRotate;
+		this.content.traverse((node) => {
+			if (node.isMesh) {
+				node.material.wireframe = newOptions.wireframe;
+				// Skeleton, Grid 등의 추가적인 설정도 여기에서 적용할 수 있습니다.
+			}
+			// Grid Helper 표시 여부
+			if (newOptions.grid && !this.gridHelper) {
+				this.gridHelper = new GridHelper(10, 10);
+				//this.scene.add(this.gridHelper);
+			} else if (!newOptions.grid && this.gridHelper) {
+				this.scene.remove(this.gridHelper);
+				//this.gridHelper = null;
+			}
+		
+			// Skeleton Helper 표시 여부
+			this.content.traverse((node) => {
+				if (node.isSkinnedMesh) {
+					node.skeleton.visible = newOptions.skeleton;
+				}
+			});
+		});
+
+	
+		// 화면 공간 패닝 (OrbitControls)
+		this.controls.screenSpacePanning = newOptions.screenSpacePan;
+	
+		// 포인트 크기 설정
+		this.content.traverse((node) => {
+			if (node.material && node.material.type === 'PointsMaterial') {
+				node.material.size = newOptions.pointSize;
+			}
+		});
+	
+		// 환경 설정
+		// `updateEnvironment` 함수 호출 (환경 관련 로직을 해당 함수에 구현)
+		this.updateEnvironment(newOptions.environment);
+	
+		// ToneMapping 설정
+		this.renderer.toneMapping = newOptions.toneMapping === 'LinearToneMapping' ? LinearToneMapping : ACESFilmicToneMapping;
+		this.renderer.toneMappingExposure = newOptions.exposure;
+	
+		// 조명 설정
+		// `updateLights` 함수를 호출하거나 여기에서 직접 조명을 업데이트
+		this.updateLights(newOptions);
+	
+		// AmbientLight 설정 업데이트
+		const ambientLight = this.scene.children.find(child => child instanceof AmbientLight);
+		if (ambientLight) {
+			ambientLight.intensity = newOptions.ambientIntensity;
+			ambientLight.color = new Color(newOptions.ambientColor);
+		}
+
+		// DirectionalLight 설정 업데이트
+		const directionalLight = this.scene.children.find(child => child instanceof DirectionalLight);
+		if (directionalLight) {
+			directionalLight.intensity = newOptions.directIntensity;
+			directionalLight.color = new Color(newOptions.directColor);
+		}
+
+	
+		// GUI 컨트롤 업데이트
+		const guiUpdateMapping = {
+			'background': 'background',
+			'autoRotate': 'autoRotate',
+			'wireframe': 'wireframe',
+			'skeleton': 'skeleton',
+			'grid': 'grid',
+			'screenSpacePan': 'screenSpacePan',
+			'pointSize': 'pointSize',
+			'bgColor': 'bgColor',
+			'environment': 'environment',
+			'toneMapping': 'toneMapping',
+			'exposure': 'exposure',
+			'punctualLights': 'punctualLights',
+			'ambientIntensity': 'ambientIntensity',
+			'ambientColor': 'ambientColor',
+			'directIntensity': 'directIntensity',
+			'directColor': 'directColor'
+		};
+	
+		for (const [option, controlName] of Object.entries(guiUpdateMapping)) {
+			const control = this.findGUIControl(controlName);
+			if (control) {
+				control.setValue(newOptions[option]);
+			}
+		};
+	}
+	
+	findGUIControl(name) {
+		let foundControl = null;
+		this.gui.__folders['Display'].__controllers.forEach((control) => {
+			if (control.property === name) {
+				foundControl = control;
+			}
+		});
+		if (!foundControl) {
+			// Lighting과 같은 다른 폴더의 컨트롤을 검색할 수 있습니다.
+		}
+		return foundControl;
 	}
 
 	clear() {

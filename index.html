@@ -1,12 +1,10 @@
 <!doctype html>
+
 <head>
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<title>glTF Viewer</title>
-	<meta
-		name="viewport"
-		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-	/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<meta name="author" content="Don McCurdy" />
 	<meta name="description" content="Drag-and-drop preview tool for glTF 2.0 3D models." />
 	<link rel="canonical" href="https://gltf-viewer.donmccurdy.com/" />
@@ -15,28 +13,150 @@
 	<link href="https://fonts.googleapis.com/css?family=Raleway:300,400" rel="stylesheet" />
 	<script defer type="module" src="src/app.js"></script>
 </head>
+
 <body>
 	<header>
 		<h1><a href="/">glTF Viewer</a></h1>
 	</header>
 	<main class="wrap">
 		<!-- 드래그앤드랍 기능 관련 요소 제거 -->
-		<div id="viewer-container"></div> <!-- Viewer를 표시할 컨테이너 -->
+		<div id="viewer-container"></div>
 		<div class="spinner"></div>
 	</main>
+
 	<script>
+		 // Preset 옵션 배열
+		window.presetOptions = {
+			'Preset1': {
+				autoRotate: true,
+				bgColor: '#ff0000',
+				wireframe: false,
+				skeleton: false,
+				grid: false,
+				screenSpacePan: true,
+				pointSize: 1.0,
+				environment: 'None',
+				toneMapping: 'LinearToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
+				exposure: 0,
+				punctualLights: true,
+				ambientIntensity: 0.3,
+				ambientColor: '#ffffff',
+				directIntensity: 2.5,
+				directColor: '#ffffff'
+			},
+			'Preset2': {
+				autoRotate: false,
+				bgColor: '#00ff00',
+				wireframe: false,
+				skeleton: false,
+				grid: false,
+				screenSpacePan: true,
+				pointSize: 1.0,
+				environment: 'Neutral',
+				toneMapping: 'LinearToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
+				exposure: 0,
+				punctualLights: true,
+				ambientIntensity: 0.3,
+				ambientColor: '#ffffff',
+				directIntensity: 2.5,
+				directColor: '#ffffff'
+			},
+			'Preset3': {
+				autoRotate: true,
+				bgColor: '#0000ff',
+				wireframe: true,
+				skeleton: true,
+				grid: true,
+				screenSpacePan: true,
+				pointSize: 1.0,
+				environment: 'Venice Sunset',
+				toneMapping: 'ACESFilmicToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
+				exposure: 0,
+				punctualLights: true,
+				ambientIntensity: 0.3,
+				ambientColor: '#ff0000',
+				directIntensity: 2.5,
+				directColor: '#ffff00'
+			},
+			'Preset4': {
+				autoRotate: false,
+				bgColor: '#ffff00',
+				wireframe: false,
+				skeleton: false,
+				grid: false,
+				screenSpacePan: true,
+				pointSize: 1.0,
+				environment: 'Footprint Court (HDR Labs)',
+				toneMapping: 'LinearToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
+				exposure: 0,
+				punctualLights: true,
+				ambientIntensity: 0.3,
+				ambientColor: '#ffffff',
+				directIntensity: 2.5,
+				directColor: '#ffffff'
+			},
+			'Preset5': {
+				autoRotate: true,
+				bgColor: '#00ffff',
+				wireframe: false,
+				skeleton: false,
+				grid: false,
+				screenSpacePan: true,
+				pointSize: 1.0,
+				environment: 'None',
+				toneMapping: 'LinearToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
+				exposure: 0,
+				punctualLights: true,
+				ambientIntensity: 0.3,
+				ambientColor: '#ffffff',
+				directIntensity: 2.5,
+				directColor: '#ffffff'
+			},
+		};
+
+		
+
+		// glb 파일 목록을 글로벌 변수로 정의합니다.
+		window.glbFiles = [
+			'/public/assets/glb/black.glb',
+			'/public/assets/glb/gradient.glb',
+			'/public/assets/glb/neon.glb',
+			'/public/assets/glb/rainbow.glb',
+			'/public/assets/glb/wf.glb',
+			'/public/assets/glb/white.glb'
+		];
+		// 파일 목록에서 랜덤하게 하나의 파일을 선택합니다.
+		const randomIndex = Math.floor(Math.random() * glbFiles.length);
+		window.selectedFile = glbFiles[randomIndex];
+		window.selectedFileName = window.selectedFile.split('/').pop();
+
+		// 선택된 파일명에 따라 추가 변수를 설정할 수 있습니다.
+		if (window.selectedFileName.includes('black')) {
+			console.log('black');
+		} else if (window.selectedFileName.includes('gradient')) {
+			console.log('gradient');
+		} else if (window.selectedFileName.includes('neon')) {
+			console.log('neon');
+		} else if (window.selectedFileName.includes('rainbow')) {
+			console.log('rainbow');
+		} else if (window.selectedFileName.includes('wf')) {
+			console.log('wf');
+		} else if (window.selectedFileName.includes('white')) {
+			console.log('white');
+		};
+
 		// true = on, flase = off
-		var viewerSettings = {
-			background: false,
-			autoRotate: true,
+		var viewerOptions = {
+			background: true,
+			autoRotate: false,
 			wireframe: false,
 			skeleton: false,
 			grid: false,
 			screenSpacePan: true,
-			pointSize: 1,
+			pointSize: 1.0,
 			bgColor: '#ffffff',
 			environment: 'None',
-			toneMapping: 'Linear',
+			toneMapping: 'LinearToneMapping', // LinearToneMapping 아니면 ACESFilmicToneMapping 2가지 중 선택
 			exposure: 0,
 			punctualLights: true,
 			ambientIntensity: 0.3,
