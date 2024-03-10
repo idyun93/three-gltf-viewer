@@ -35,7 +35,7 @@ class App {
 		this.inputEl = el.querySelector('#file-input');
 		this.validator = new Validator(el);
 
-		this.createDropzone();
+		//this.createDropzone();
 		this.hideSpinner();
 
 		const options = this.options;
@@ -48,6 +48,30 @@ class App {
 		if (options.model) {
 			this.view(options.model, '', new Map());
 		}
+
+		// 지정된 파일 중 하나를 랜덤하게 선택하여 Viewer에 로드하는 로직을 추가합니다.
+		this.loadRandomModel();
+	}
+
+	/**
+	* 지정된 glb 파일 목록 중에서 랜덤하게 하나를 선택하여 로드합니다.
+	*/
+	loadRandomModel() {
+		const glbFiles = [
+			'/public/assets/glb/black.glb',
+			'/public/assets/glb/gradient.glb',
+			'/public/assets/glb/neon.glb',
+			'/public/assets/glb/rainbow.glb',
+			'/public/assets/glb/wf.glb',
+			'/public/assets/glb/white.glb'
+		];
+
+		// 파일 목록에서 랜덤하게 하나의 파일을 선택합니다.
+		const randomIndex = Math.floor(Math.random() * glbFiles.length);
+		const selectedFile = glbFiles[randomIndex];
+
+		// 선택된 파일을 Viewer에 로드합니다.
+		this.view(selectedFile, '', new Map());
 	}
 
 	/**
