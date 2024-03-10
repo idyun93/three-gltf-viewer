@@ -21,8 +21,7 @@ class App {
 	constructor(el, location) {
 		const hash = location.hash ? queryString.parse(location.hash) : {};
 		this.options = {
-			//kiosk: Boolean(hash.kiosk),
-			kiosk: false,
+			kiosk: Boolean(hash.kiosk),
 			model: hash.model || '',
 			preset: hash.preset || '',
 			cameraPosition: hash.cameraPosition ? hash.cameraPosition.split(',').map(Number) : null,
@@ -76,6 +75,105 @@ class App {
 		this.view(selectedFile, '', new Map());
 	}
 
+	loadViewerOptions() {
+        if (window.viewerOptions) {
+            const options = window.viewerOptions;
+
+            // 예시: Viewer의 배경색 설정
+            if (options.bgColor && this.viewer) {
+                this.viewer.setBackgroundColor(options.bgColor);
+            }
+
+            // 다른 옵션들을 여기에 설정할 수 있습니다.
+            // 주의: Viewer 클래스에 해당 옵션을 설정하는 메서드가 있는지 확인해야 합니다.
+        }
+    }
+
+	createViewer() {
+        this.viewerEl = document.createElement('div');
+        this.viewerEl.classList.add('viewer');
+        this.el.appendChild(this.viewerEl); // 사용하는 요소 변경
+        this.viewer = new Viewer(this.viewerEl, this.options);
+        this.applyViewerSettings(); // Viewer 설정 적용
+        return this.viewer;
+    }
+
+	applyViewerSettings() {
+		if (window.viewerSettings) {
+			const settings = window.viewerSettings;
+			// 배경 설정
+			this.viewer.scene.background = settings.background ? new THREE.Color(settings.bgColor) : null;
+			// 자동 회전 설정
+			this.viewer.controls.autoRotate = settings.autoRotate;
+			// 스크린 공간 패닝 설정
+			this.viewer.controls.screenSpacePanning = settings.screenSpacePan;
+
+			// 카메라 위치 설정
+			this.viewer.defaultCamera.position.set(-3, 4, 5);
+
+			// 카메라 확대 설정
+			this.viewer.defaultCamera.fov = 40;
+			this.viewer.defaultCamera.updateProjectionMatrix();
+
+			// pointSize 설정
+			this.viewer.defaultPointSize = settings.pointSize;
+			
+			// bgColor 설정
+			this.viewer.setBackgroundColor(settings.bgColor);
+
+			// environment 설정
+			this.viewer.setEnvironment(settings.environment);
+
+			// 톤 매핑 및 노출 설정
+			this.viewer.renderer.toneMapping = THREE[`${settings.toneMapping}ToneMapping`];
+			this.viewer.renderer.toneMappingExposure = settings.exposure;
+
+			// punctualLight 설정
+			this.viewer.punctualLightsEnabled = settings.punctualLights;
+			
+			
+			// 와이어프레임 설정
+			if (settings.wireframe) {
+				this.viewer.content.traverse((node) => {
+					if (node.isMesh) {
+						node.material.wireframe = settings.wireframe;
+					}
+				});
+			}
+
+			// 스켈레톤 설정
+			if (settings.skeleton) {
+				this.viewer.content.traverse((node) => {
+					if (node.isSkinnedMesh) {
+						node.skeleton.visible = settings.skeleton;
+					}
+				});
+			}
+
+			// 그리드 설정
+			if (settings.grid) {
+				this.viewer.grid.visible = settings.grid;
+			}
+
+			// 라이트 설정
+			if (settings.punctualLights) {
+				this.viewer.addLights();
+			} else {
+				this.viewer.removeLights();
+			}
+			this.viewer.lights.forEach((light) => {
+				if (light.isAmbientLight) {
+					light.intensity = settings.ambientIntensity;
+					light.color.set(settings.ambientColor);
+				} else if (light.isDirectionalLight) {
+					light.intensity = settings.directIntensity;
+					light.color.set(settings.directColor);
+				}
+			});
+
+			
+		}
+	}
 	/**
 	 * Sets up the drag-and-drop controller.
 	 */
